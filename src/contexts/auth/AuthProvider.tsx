@@ -1,26 +1,21 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
-import type { AuthContextValue, AuthUser } from "./AuthContext.types";
+import type { AuthContextValue, AuthSession } from "./AuthContext.types";
 
 const AUTH_STORAGE_KEY = "auria_wallet_auth";
-
-interface StoredAuthState {
-  user: AuthUser;
-  token: string;
-}
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-function getInitialSession(): StoredAuthState | null {
+function getInitialSession(): AuthSession | null {
   try {
     const rawSession = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!rawSession) {
       return null;
     }
 
-    const parsed = JSON.parse(rawSession) as Partial<StoredAuthState>;
+    const parsed = JSON.parse(rawSession) as Partial<AuthSession>;
     if (parsed.user && parsed.token) {
       return {
         user: parsed.user,
@@ -37,11 +32,11 @@ function getInitialSession(): StoredAuthState | null {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [sessionState, setSessionState] = useState<StoredAuthState | null>(() =>
+  const [sessionState, setSessionState] = useState<AuthSession | null>(() =>
     getInitialSession(),
   );
 
-  const setSession = useCallback((session: StoredAuthState | null) => {
+  const setSession = useCallback((session: AuthSession | null) => {
     if (session) {
       setSessionState(session);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));

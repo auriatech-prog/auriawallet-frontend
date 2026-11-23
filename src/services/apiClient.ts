@@ -78,11 +78,20 @@ async function request<T>(
   const normalizedEndpoint = endpoint.startsWith("/")
     ? endpoint
     : `/${endpoint}`;
-  const response = await fetch(`${BASE_URL}${normalizedEndpoint}`, {
-    ...rest,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${normalizedEndpoint}`, {
+      ...rest,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new ApiError(
+      0,
+      "No se pudo conectar con el servidor. Revisá tu conexión e intentá nuevamente.",
+      "NETWORK_ERROR",
+    );
+  }
 
   const contentType = response.headers.get("content-type");
   const isJson = contentType?.includes("application/json");
