@@ -1,7 +1,13 @@
 export interface AuthUser {
   id: string;
+  name: string;
   email: string;
-  name?: string;
+  createdAt?: string;
+}
+
+export interface AuthSession {
+  user: AuthUser;
+  token: string;
 }
 
 export interface AuthContextValue {
@@ -9,6 +15,6 @@ export interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  setSession: (session: { user: AuthUser; token: string } | null) => void;
+  setSession: (session: AuthSession | null) => void;
   logout: () => void;
 }
