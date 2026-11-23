@@ -9,6 +9,7 @@ import { ConversionPage } from "../pages/operations/ConversionPage";
 import { TransactionHistoryPage } from "../pages/transaction-history/TransactionHistoryPage";
 import { TransactionConfirmationPage } from "../pages/transaction-confirmation/TransactionConfirmationPage";
 import { ProfilePage } from "../pages/profile/ProfilePage";
+import { UiShowcase } from "../pages/dev/UiShowcase";
 
 export function AppRoutes() {
   return (
@@ -17,6 +18,10 @@ export function AppRoutes() {
         {/* Rutas públicas (sin navbar ni bottom nav) */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        {/* Ruta de desarrollo para el showcase (solo en modo development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <Route path="/dev/ui-showcase" element={<UiShowcase />} />
+        )}
 
         {/* Rutas protegidas con Layout principal */}
         <Route element={<ProtectedRoute />}>
