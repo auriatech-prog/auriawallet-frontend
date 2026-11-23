@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paleta oficial AuriaWallet */
+  --color-auria-page: #ecefe9;
+  --color-auria-cream: #f9faf5;
+  --color-auria-card: #ffffff;
+  --color-auria-forest: #0e3828;
+  --color-auria-forest-hover: #164d37;
+  --color-auria-lime: #c9f26b;
+  --color-auria-lime-soft: #e6f7b8;
+  --color-auria-ink: #14221b;
+  --color-auria-muted: #5a6860;
+  --color-auria-border: #e2e7df;
+
+  /* Tipografía base */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: var(--color-auria-cream);
+    color: var(--color-auria-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+}
