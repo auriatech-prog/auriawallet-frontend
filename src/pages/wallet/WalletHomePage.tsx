@@ -151,6 +151,26 @@ export function WalletHomePage() {
               Reintentar
             </Button>
           </Card>
+        ) : balances?.length === 0 ? (
+          <div role="status" aria-live="polite">
+            <Card className="border border-auria-border p-5 shadow-sm">
+              <h3 className="font-semibold text-auria-ink">
+                Todavía no hay saldos para mostrar
+              </h3>
+              <p className="mt-1 text-sm text-auria-muted">
+                Actualizá la billetera para consultar los saldos disponibles.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-4 min-h-11 w-full rounded-xl text-sm font-semibold"
+                disabled={!isOnline}
+                onClick={() => void refreshBalances()}
+              >
+                Actualizar saldos
+              </Button>
+            </Card>
+          </div>
         ) : (
           <ul className="space-y-3" aria-label="Saldos disponibles">
             {SUPPORTED_CURRENCIES.map((currency) => (

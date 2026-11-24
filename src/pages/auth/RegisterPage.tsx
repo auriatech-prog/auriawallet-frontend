@@ -166,9 +166,9 @@ export function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-auria-page px-4 py-10">
+    <main className="flex min-h-dvh items-center justify-center bg-auria-page px-3 py-6 sm:px-4 sm:py-10">
       <div className="w-full max-w-md">
-        <header className="mb-8 text-center">
+        <header className="mb-6 text-center sm:mb-8">
           <Link
             to="/login"
             className="mb-6 inline-flex items-center gap-2 text-auria-ink no-underline"
@@ -180,18 +180,18 @@ export function RegisterPage() {
             </span>
             <span className="text-xl font-bold tracking-tight">AuriaWallet</span>
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-auria-forest">
+          <h1 className="text-2xl leading-tight font-bold tracking-tight text-auria-forest sm:text-3xl">
             Creá tu cuenta
           </h1>
-          <p className="mt-2 text-sm text-auria-muted">
+          <p className="mx-auto mt-2 max-w-sm text-sm text-auria-muted">
             Empezá a organizar tus monedas en un solo lugar.
           </p>
         </header>
 
-        <Card className="border border-auria-border p-6 shadow-sm sm:p-8">
+        <Card className="border border-auria-border p-4 shadow-sm sm:p-6 md:p-8">
           {!isOnline && (
             <p
-              className="mb-5 rounded-lg border border-auria-border bg-auria-cream px-4 py-3 text-sm text-auria-ink"
+              className="mb-4 break-words rounded-lg border border-auria-border bg-auria-cream px-3 py-3 text-sm text-auria-ink sm:mb-5 sm:px-4"
               role="status"
               aria-live="polite"
             >
@@ -202,7 +202,7 @@ export function RegisterPage() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-5"
+            className="space-y-4 sm:space-y-5"
             aria-busy={isLoading}
           >
             <Input
@@ -261,7 +261,7 @@ export function RegisterPage() {
             />
 
             {errors.general && (
-              <p className="text-sm text-red-700" role="alert" aria-live="polite">
+              <p className="break-words text-sm text-red-700" role="alert" aria-live="polite">
                 {errors.general}
               </p>
             )}
@@ -288,7 +288,7 @@ export function RegisterPage() {
             )}
           </form>
 
-          <p className="mt-6 text-center text-sm text-auria-muted">
+          <p className="mt-5 text-center text-sm text-auria-muted sm:mt-6">
             ¿Ya tenés una cuenta?{" "}
             <Link
               to="/login"
