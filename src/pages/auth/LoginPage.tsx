@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Button, Card, Input } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,6 +51,20 @@ export function LoginPage() {
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [canRetry, setCanRetry] = useState(false);
+
+  useEffect(() => {
+    const updateConnectionStatus = () => setIsOnline(navigator.onLine);
+
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
+
+    return () => {
+      window.removeEventListener("online", updateConnectionStatus);
+      window.removeEventListener("offline", updateConnectionStatus);
+    };
+  }, []);
 
   function validate(): FormErrors {
     const nextErrors: FormErrors = {};
@@ -73,11 +87,11 @@ export function LoginPage() {
     return (event: ChangeEvent<HTMLInputElement>) => {
       setForm((current) => ({ ...current, [field]: event.target.value }));
       setErrors((current) => ({ ...current, [field]: undefined, general: undefined }));
+      setCanRetry(false);
     };
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitLogin() {
     const nextErrors = validate();
 
     if (Object.keys(nextErrors).length > 0) {
@@ -97,9 +111,15 @@ export function LoginPage() {
       navigate(destination, { replace: true });
     } catch (error) {
       setErrors({ general: getLoginError(error) });
+      setCanRetry(error instanceof ApiError && error.status === 0);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submitLogin();
   }
 
   return (
@@ -132,6 +152,16 @@ export function LoginPage() {
               role="status"
             >
               {locationState.notice}
+            </p>
+          )}
+
+          {!isOnline && (
+            <p
+              className="mb-5 rounded-lg border border-auria-border bg-auria-cream px-4 py-3 text-sm text-auria-ink"
+              role="status"
+              aria-live="polite"
+            >
+              No hay conexión a internet. Reconectate para iniciar sesión.
             </p>
           )}
 
@@ -178,9 +208,22 @@ export function LoginPage() {
               type="submit"
               className="min-h-12 w-full rounded-xl text-sm font-semibold"
               isLoading={isLoading}
+              disabled={!isOnline}
             >
               {isLoading ? "Ingresando…" : "Iniciar sesión"}
             </Button>
+
+            {canRetry && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-h-11 w-full rounded-xl text-sm font-semibold"
+                onClick={() => void submitLogin()}
+                disabled={!isOnline || isLoading}
+              >
+                Reintentar inicio de sesión
+              </Button>
+            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-auria-muted">

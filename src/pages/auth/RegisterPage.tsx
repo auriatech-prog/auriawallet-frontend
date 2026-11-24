@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button, Card, Input } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,6 +60,20 @@ export function RegisterPage() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [canRetry, setCanRetry] = useState(false);
+
+  useEffect(() => {
+    const updateConnectionStatus = () => setIsOnline(navigator.onLine);
+
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
+
+    return () => {
+      window.removeEventListener("online", updateConnectionStatus);
+      window.removeEventListener("offline", updateConnectionStatus);
+    };
+  }, []);
 
   function validate(): FormErrors {
     const nextErrors: FormErrors = {};
@@ -99,11 +113,11 @@ export function RegisterPage() {
         ...(field === "password" ? { confirmPassword: undefined } : {}),
         general: undefined,
       }));
+      setCanRetry(false);
     };
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitRegistration() {
     const nextErrors = validate();
 
     if (Object.keys(nextErrors).length > 0) {
@@ -122,6 +136,7 @@ export function RegisterPage() {
       });
     } catch (error) {
       setErrors({ general: getRegisterError(error) });
+      setCanRetry(error instanceof ApiError && error.status === 0);
       setIsLoading(false);
       return;
     }
@@ -143,6 +158,11 @@ export function RegisterPage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submitRegistration();
   }
 
   return (
@@ -169,6 +189,16 @@ export function RegisterPage() {
         </header>
 
         <Card className="border border-auria-border p-6 shadow-sm sm:p-8">
+          {!isOnline && (
+            <p
+              className="mb-5 rounded-lg border border-auria-border bg-auria-cream px-4 py-3 text-sm text-auria-ink"
+              role="status"
+              aria-live="polite"
+            >
+              No hay conexión a internet. Reconectate para crear tu cuenta.
+            </p>
+          )}
+
           <form
             onSubmit={handleSubmit}
             noValidate
@@ -240,9 +270,22 @@ export function RegisterPage() {
               type="submit"
               className="min-h-12 w-full rounded-xl text-sm font-semibold"
               isLoading={isLoading}
+              disabled={!isOnline}
             >
               {isLoading ? "Creando cuenta…" : "Crear cuenta"}
             </Button>
+
+            {canRetry && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="min-h-11 w-full rounded-xl text-sm font-semibold"
+                onClick={() => void submitRegistration()}
+                disabled={!isOnline || isLoading}
+              >
+                Reintentar registro
+              </Button>
+            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-auria-muted">
