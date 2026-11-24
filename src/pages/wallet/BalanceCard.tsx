@@ -13,7 +13,7 @@ export function BalanceCard({ currency, amount, isVisible }: BalanceCardProps) {
 
   return (
     <Card className="border border-auria-border p-4 shadow-sm sm:p-5">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between min-[480px]:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <CurrencyBadge
             currency={currency}
@@ -26,7 +26,7 @@ export function BalanceCard({ currency, amount, isVisible }: BalanceCardProps) {
             <p className="mt-0.5 text-xs text-auria-muted">Saldo disponible</p>
           </div>
         </div>
-        <p className="shrink-0 text-right text-base font-bold tracking-tight text-auria-forest sm:text-lg">
+        <p className="w-full break-words text-right text-sm font-bold tracking-tight text-auria-forest min-[480px]:w-auto min-[480px]:text-base sm:text-lg">
           {amount === null
             ? "—"
             : isVisible

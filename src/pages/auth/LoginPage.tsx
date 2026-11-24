@@ -123,9 +123,9 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-auria-page px-4 py-10">
+    <main className="flex min-h-dvh items-center justify-center bg-auria-page px-3 py-6 sm:px-4 sm:py-10">
       <div className="w-full max-w-md">
-        <header className="mb-8 text-center">
+        <header className="mb-6 text-center sm:mb-8">
           <Link
             to="/login"
             className="mb-6 inline-flex items-center gap-2 text-auria-ink no-underline"
@@ -137,15 +137,15 @@ export function LoginPage() {
             </span>
             <span className="text-xl font-bold tracking-tight">AuriaWallet</span>
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-auria-forest">
+          <h1 className="text-2xl leading-tight font-bold tracking-tight text-auria-forest sm:text-3xl">
             Ingresá a tu cuenta
           </h1>
-          <p className="mt-2 text-sm text-auria-muted">
+          <p className="mx-auto mt-2 max-w-sm text-sm text-auria-muted">
             Volvé a tus saldos y operaciones multimoneda.
           </p>
         </header>
 
-        <Card className="border border-auria-border p-6 shadow-sm sm:p-8">
+        <Card className="border border-auria-border p-4 shadow-sm sm:p-6 md:p-8">
           {locationState?.notice && (
             <p
               className="mb-5 rounded-lg border border-auria-border bg-auria-cream px-4 py-3 text-sm text-auria-ink"
@@ -168,7 +168,7 @@ export function LoginPage() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-5"
+            className="space-y-4 sm:space-y-5"
             aria-busy={isLoading}
           >
             <Input
@@ -199,7 +199,7 @@ export function LoginPage() {
             />
 
             {errors.general && (
-              <p className="text-sm text-red-700" role="alert" aria-live="polite">
+              <p className="break-words text-sm text-red-700" role="alert" aria-live="polite">
                 {errors.general}
               </p>
             )}
@@ -226,7 +226,7 @@ export function LoginPage() {
             )}
           </form>
 
-          <p className="mt-6 text-center text-sm text-auria-muted">
+          <p className="mt-5 text-center text-sm text-auria-muted sm:mt-6">
             ¿Todavía no tenés cuenta?{" "}
             <Link
               to="/register"
