@@ -40,7 +40,7 @@ export function BalanceCard({ currency, amount, isVisible }: BalanceCardProps) {
             <p className="mt-0.5 text-xs text-auria-muted">Saldo disponible</p>
           </div>
         </div>
-        <p className="w-full break-words text-right text-sm font-bold tracking-tight text-auria-forest min-[480px]:w-auto min-[480px]:text-base sm:text-lg">
+        <p className="w-full wrap-break-word text-right text-sm font-bold tracking-tight text-auria-forest min-[480px]:w-auto min-[480px]:text-base sm:text-lg">
           {amount === null
             ? "—"
             : isVisible
