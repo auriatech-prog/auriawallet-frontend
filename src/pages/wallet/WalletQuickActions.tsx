@@ -1,52 +1,78 @@
 import { Link } from "react-router";
 
 const QUICK_ACTIONS = [
-  { to: "/operations/buy-sell", label: "Comprar", description: "Sumá USD o EUR" },
-  { to: "/operations/buy-sell", label: "Vender", description: "Recibí ARS" },
-  { to: "/operations/convert", label: "Convertir", description: "Entre tus monedas" },
+  {
+    to: "/operations/buy-sell?mode=buy",
+    label: "Añadir",
+    icon: (
+      <svg
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v8M8 12h8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    to: "/operations/buy-sell?mode=sell",
+    label: "Enviar",
+    icon: (
+      <svg
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M8 12h8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    to: "/operations/convert",
+    label: "Convertir",
+    icon: (
+      <svg
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path
+          d="M7 7h11l-3-3M17 17H6l3 3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
 ] as const;
 
 export function WalletQuickActions() {
   return (
-    <section aria-labelledby="actions-heading" className="space-y-3">
-      <div>
-        <h2 id="actions-heading" className="text-lg font-semibold text-auria-ink">
-          Operaciones
-        </h2>
-        <p className="mt-1 text-sm text-auria-muted">
-          Elegí qué querés hacer con tu billetera.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <section aria-label="Acciones rápidas">
+      <div className="grid grid-cols-3 gap-3">
         {QUICK_ACTIONS.map((action) => (
           <Link
             key={action.label}
             to={action.to}
-            className="group flex min-h-16 items-center justify-between gap-3 rounded-xl border border-auria-border bg-auria-card px-4 py-3 text-auria-ink transition hover:border-auria-forest/30 hover:bg-auria-lime-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-auria-forest px-3 py-4 text-white shadow-sm transition hover:bg-auria-forest-hover active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
           >
-            <span>
-              <span className="block text-sm font-semibold">{action.label}</span>
-              <span className="mt-0.5 block text-xs text-auria-muted">
-                {action.description}
-              </span>
+            <span aria-hidden="true" className="text-white">
+              {action.icon}
             </span>
-            <span
-              aria-hidden="true"
-              className="text-lg text-auria-forest transition group-hover:translate-x-0.5"
-            >
-              →
+            <span className="text-sm font-medium tracking-tight">
+              {action.label}
             </span>
           </Link>
         ))}
       </div>
-
-      <Link
-        to="/transactions"
-        className="inline-flex min-h-10 items-center text-sm font-semibold text-auria-forest underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
-      >
-        Ver actividad reciente
-      </Link>
     </section>
   );
 }
