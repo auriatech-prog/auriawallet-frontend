@@ -4,6 +4,7 @@ import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { MainLayout } from "../components/layout/MainLayout";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
+import { GoogleCallbackPage } from "../pages/auth/GoogleCallbackPage";
 import { WalletHomePage } from "../pages/wallet/WalletHomePage";
 import { OperationsHubPage } from "../pages/operations/OperationsHubPage";
 import { AddMoneyPage } from "../pages/operations/AddMoneyPage";
@@ -17,6 +18,9 @@ export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Callback OAuth de Google (fuera de guards) */}
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+
         {/* Rutas exclusivas para usuarios no autenticados */}
         <Route element={<PublicOnlyRoute />}>
           <Route path="/login" element={<LoginPage />} />
