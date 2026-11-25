@@ -231,6 +231,7 @@ export function LoginPage() {
 
           <Link
             to="/register"
+            replace
             className="text-sm font-medium text-auria-muted hover:text-auria-forest"
           >
             Crear cuenta
@@ -380,6 +381,7 @@ export function LoginPage() {
               ¿Todavía no tenés cuenta?{" "}
               <Link
                 to="/register"
+                replace
                 className="font-semibold text-auria-forest underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-auria-forest"
               >
                 Crear cuenta

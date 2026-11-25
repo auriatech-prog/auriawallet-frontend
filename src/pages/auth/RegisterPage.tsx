@@ -278,6 +278,7 @@ export function RegisterPage() {
 
           <Link
             to="/login"
+            replace
             className="text-sm font-medium text-auria-muted hover:text-auria-forest"
           >
             Iniciar sesión
@@ -462,6 +463,7 @@ export function RegisterPage() {
               ¿Ya tenés una cuenta?{" "}
               <Link
                 to="/login"
+                replace
                 className="font-semibold text-auria-forest underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-auria-forest"
               >
                 Iniciar sesión
