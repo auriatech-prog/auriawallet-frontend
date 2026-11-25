@@ -4,6 +4,7 @@ import { Button, Input } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/services/apiClient";
 import { authService } from "@/services/authService";
+import { startGoogleSignIn } from "@/services/googleAuth";
 
 interface FormState {
   name: string;
@@ -240,22 +241,24 @@ export function RegisterPage() {
     void submitRegistration();
   }
 
-  function handleGoogleRegister() {
+  async function handleGoogleRegister() {
     if (!isOnline || isBusy) return;
 
     setIsGoogleLoading(true);
     setErrors({});
+    setCanRetry(false);
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
-    if (apiBaseUrl) {
-      window.location.assign(`${apiBaseUrl.replace(/\/$/, "")}/auth/google`);
-      return;
+    try {
+      await startGoogleSignIn();
+    } catch (error) {
+      setErrors({
+        general:
+          error instanceof Error
+            ? error.message
+            : "El registro con Google todavía no está configurado.",
+      });
+      setIsGoogleLoading(false);
     }
-
-    setErrors({
-      general: "El registro con Google todavía no está configurado.",
-    });
-    setIsGoogleLoading(false);
   }
 
   return (
@@ -445,7 +448,7 @@ export function RegisterPage() {
 
                 <button
                   type="button"
-                  onClick={handleGoogleRegister}
+                  onClick={() => void handleGoogleRegister()}
                   disabled={!isOnline || isBusy}
                   className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-auria-border bg-auria-card px-4 text-sm font-semibold text-auria-ink shadow-2xs transition hover:bg-auria-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest disabled:cursor-not-allowed disabled:opacity-50"
                 >
