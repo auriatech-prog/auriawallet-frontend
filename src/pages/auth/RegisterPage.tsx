@@ -292,7 +292,7 @@ export function RegisterPage() {
                 Creá tu cuenta
               </h1>
               <p className="text-sm text-auria-muted">
-                Empezá a organizar tus monedas en un solo lugar.
+                Comprá, vendé y convertí. Todo desde un mismo lugar.
               </p>
             </section>
 
