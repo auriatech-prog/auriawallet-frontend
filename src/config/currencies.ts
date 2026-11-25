@@ -15,14 +15,14 @@ export const CURRENCY_CONFIG: Record<CurrencyCode, CurrencyConfig> = {
     code: "USD",
     label: "Dólar estadounidense",
     symbol: "US$",
-    locale: "en-US",
+    locale: "es-AR",
     decimals: 2,
   },
   EUR: {
     code: "EUR",
     label: "Euro",
     symbol: "€",
-    locale: "de-DE",
+    locale: "es-AR",
     decimals: 2,
   },
   ARS: {
@@ -46,13 +46,14 @@ export function formatCurrencyAmount(
   const config = CURRENCY_CONFIG[currency];
 
   if (Number.isNaN(numeric)) {
-    return `${config.symbol} 0.00`;
+    return `${config.symbol} 0,00`;
   }
 
-  return new Intl.NumberFormat(config.locale, {
-    style: "currency",
-    currency: config.code,
+  const formattedNumber = new Intl.NumberFormat(config.locale, {
+    style: "decimal",
     minimumFractionDigits: config.decimals,
     maximumFractionDigits: config.decimals,
   }).format(numeric);
+
+  return `${config.symbol} ${formattedNumber}`;
 }
