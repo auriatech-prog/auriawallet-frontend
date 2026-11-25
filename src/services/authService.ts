@@ -7,6 +7,11 @@ import type {
   RegisterResponse,
 } from "../types/auth";
 
+export interface ExchangeGoogleCodePayload {
+  code: string;
+  codeVerifier: string;
+}
+
 export const authService = {
   login(payload: LoginRequest): Promise<LoginResponse> {
     return apiClient.post<LoginResponse>("/api/auth/login", payload, {
@@ -16,6 +21,14 @@ export const authService = {
 
   register(payload: RegisterRequest): Promise<RegisterResponse> {
     return apiClient.post<RegisterResponse>("/api/auth/register", payload, {
+      requiresAuth: false,
+    });
+  },
+
+  exchangeGoogleCode(
+    payload: ExchangeGoogleCodePayload,
+  ): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>("/api/auth/google/exchange", payload, {
       requiresAuth: false,
     });
   },
