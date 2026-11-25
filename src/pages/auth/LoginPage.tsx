@@ -245,7 +245,7 @@ export function LoginPage() {
                 Ingresá a tu cuenta
               </h1>
               <p className="text-sm text-auria-muted">
-                Volvé a tus saldos y operaciones multimoneda.
+                Tu dinero, sin fronteras.
               </p>
             </section>
 
