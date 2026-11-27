@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router";
+import { Link, NavLink, useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 
 type SidebarIconName = "home" | "activity" | "operations" | "account";
@@ -12,7 +12,7 @@ const DESKTOP_SIDEBAR_ITEMS: {
   { to: "/profile", label: "Mi Cuenta", icon: "account" },
   { to: "/wallet", label: "Inicio", icon: "home" },
   { to: "/transactions", label: "Actividad", icon: "activity" },
-  { to: "/operations/buy-sell", label: "Operaciones", icon: "operations" },
+  { to: "/operations", label: "Operaciones", icon: "operations" },
 ];
 
 const MOBILE_BOTTOM_ITEMS: {
@@ -22,9 +22,21 @@ const MOBILE_BOTTOM_ITEMS: {
 }[] = [
   { to: "/wallet", label: "Inicio", icon: "home" },
   { to: "/transactions", label: "Actividad", icon: "activity" },
-  { to: "/operations/buy-sell", label: "Operaciones", icon: "operations" },
+  { to: "/operations", label: "Operaciones", icon: "operations" },
   { to: "/profile", label: "Mi Cuenta", icon: "account" },
 ];
+
+function isNavItemActive(
+  itemTo: string,
+  currentPathname: string,
+  navLinkIsActive: boolean,
+): boolean {
+  if (navLinkIsActive) return true;
+  if (itemTo === "/operations") {
+    return currentPathname.startsWith("/operations");
+  }
+  return false;
+}
 
 function NavIcon({
   icon,
@@ -314,6 +326,7 @@ export function DesktopTopBar() {
 
 export function Navbar() {
   const { logout } = useAuth();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [hasUnreadNotifications] = useState(false);
 
@@ -359,26 +372,30 @@ export function Navbar() {
           <NavLink
             key={item.to}
             to={item.to}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 rounded-xl py-1 text-[11px] no-underline transition ${
-                isActive
+            className={({ isActive }) => {
+              const active = isNavItemActive(item.to, pathname, isActive);
+              return `flex flex-col items-center justify-center gap-1 rounded-xl py-1 text-[11px] no-underline transition ${
+                active
                   ? "font-bold text-auria-forest"
                   : "font-medium text-auria-muted hover:text-auria-ink"
-              }`
-            }
+              }`;
+            }}
           >
-            {({ isActive }) => (
-              <>
-                <span
-                  className={`flex h-7 w-11 items-center justify-center rounded-full transition ${
-                    isActive ? "bg-auria-lime-soft text-auria-forest" : ""
-                  }`}
-                >
-                  <NavIcon icon={item.icon} className="h-4 w-4 shrink-0" />
-                </span>
-                <span className="leading-none">{item.label}</span>
-              </>
-            )}
+            {({ isActive }) => {
+              const active = isNavItemActive(item.to, pathname, isActive);
+              return (
+                <>
+                  <span
+                    className={`flex h-7 w-11 items-center justify-center rounded-full transition ${
+                      active ? "bg-auria-lime-soft text-auria-forest" : ""
+                    }`}
+                  >
+                    <NavIcon icon={item.icon} className="h-4 w-4 shrink-0" />
+                  </span>
+                  <span className="leading-none">{item.label}</span>
+                </>
+              );
+            }}
           </NavLink>
         ))}
       </nav>
@@ -409,13 +426,14 @@ export function Navbar() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition ${
-                    isActive
+                className={({ isActive }) => {
+                  const active = isNavItemActive(item.to, pathname, isActive);
+                  return `flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition ${
+                    active
                       ? "bg-auria-lime-soft font-bold text-auria-forest"
                       : "font-medium text-auria-muted hover:bg-auria-page hover:text-auria-ink"
-                  }`
-                }
+                  }`;
+                }}
               >
                 <NavIcon icon={item.icon} />
                 <span>{item.label}</span>

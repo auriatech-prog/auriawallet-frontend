@@ -11,8 +11,8 @@ interface WalletQuickActionsProps {
 }
 
 const QUICK_ACTIONS: QuickActionItem[] = [
-  { label: "Añadir", to: "/operations/buy-sell?mode=buy", icon: "add" },
-  { label: "Enviar", to: "/operations/buy-sell?mode=sell", icon: "send" },
+  { label: "Añadir", to: "/operations/add", icon: "add" },
+  { label: "Enviar", to: "/operations/send", icon: "send" },
   { label: "Convertir", to: "/operations/convert", icon: "convert" },
 ];
 
