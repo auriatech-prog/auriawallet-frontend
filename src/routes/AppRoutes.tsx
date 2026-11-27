@@ -35,7 +35,10 @@ export function AppRoutes() {
             <Route path="/operations/add" element={<AddMoneyPage />} />
             <Route path="/operations/send" element={<SendMoneyPage />} />
             <Route path="/operations/convert" element={<ConversionPage />} />
-            <Route path="/operations/buy-sell" element={<AddMoneyPage />} />
+            <Route
+              path="/operations/buy-sell"
+              element={<Navigate to="/operations" replace />}
+            />
             <Route path="/transactions" element={<TransactionHistoryPage />} />
             <Route
               path="/transactions/confirmation"

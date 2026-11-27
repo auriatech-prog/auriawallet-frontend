@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 
 const AUTH_STORAGE_KEY = "auria_wallet_auth";
 
 type ProfileSectionKey =
-  | "edit"
   | "personal"
   | "security"
   | "limits"
@@ -13,101 +12,174 @@ type ProfileSectionKey =
   | "help"
   | null;
 
-function ChevronLeftIcon() {
+interface ProfileCardItem {
+  key: Exclude<ProfileSectionKey, null>;
+  title: string;
+  description: string;
+  anchorId?: string;
+  renderIcon: () => ReactNode;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase() || "AW";
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function UserCardIcon() {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeWidth="1.8"
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <path d="m15 18-6-6 6-6" />
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="9" cy="11.5" r="2" />
+      <path
+        d="M6.5 16a3 3 0 0 1 5 0M14.5 10h3.5M14.5 14h3.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-function ChevronRightIcon() {
+function ShieldLockIcon() {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-4 w-4 shrink-0 text-auria-ink"
+      strokeWidth="1.8"
+      className="h-5 w-5"
       aria-hidden="true"
     >
-      <path d="m9 18 6-6-6-6" />
+      <rect x="6" y="11" width="12" height="9" rx="2" />
+      <path d="M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11" strokeLinecap="round" />
     </svg>
   );
 }
 
-function HelpCircleIcon() {
+function SlidersCardIcon() {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.9"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeWidth="1.8"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M7 12h10M10 9.5v5M14 10.5v3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BellCardIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path
+        d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 0 1-6 0"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function HelpCardIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
       className="h-5 w-5"
       aria-hidden="true"
     >
       <circle cx="12" cy="12" r="9" />
-      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-      <path d="M12 17h.01" />
+      <path
+        d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M12 17h.01" strokeLinecap="round" />
     </svg>
   );
 }
 
-function CheckIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-3.5 w-3.5"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
+const PROFILE_CARDS: ProfileCardItem[] = [
+  {
+    key: "personal",
+    title: "Datos personales",
+    description: "Nombre, correo y datos de tu cuenta.",
+    renderIcon: () => <UserCardIcon />,
+  },
+  {
+    key: "security",
+    title: "Seguridad",
+    description: "Métodos de acceso y estado de sesión.",
+    renderIcon: () => <ShieldLockIcon />,
+  },
+  {
+    key: "limits",
+    title: "Límites de operación",
+    description: "Monedas habilitadas y nivel de cuenta.",
+    renderIcon: () => <SlidersCardIcon />,
+  },
+  {
+    key: "notifications",
+    title: "Notificaciones",
+    description: "Alertas de movimientos y cotizaciones.",
+    renderIcon: () => <BellCardIcon />,
+  },
+  {
+    key: "help",
+    title: "Centro de ayuda",
+    description: "Soporte y consultas sobre tu billetera.",
+    anchorId: "faq",
+    renderIcon: () => <HelpCardIcon />,
+  },
+];
 
 export function ProfilePage() {
   const { user, logout } = useAuth();
+  const { hash } = useLocation();
   const navigate = useNavigate();
 
   const [activeSection, setActiveSection] = useState<ProfileSectionKey>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  const resolvedSection: ProfileSectionKey =
+    activeSection === null && hash === "#faq" ? "help" : activeSection;
+
   const displayName = user?.name?.trim() || "Usuario Auria";
   const displayEmail = user?.email?.trim() || "cuenta@auriawallet.app";
+  const initials = getInitials(displayName);
+
+  useEffect(() => {
+    if (hash !== "#faq") return;
+    const faqElement = document.getElementById("faq");
+    faqElement?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [hash]);
 
   const toggleSection = (section: Exclude<ProfileSectionKey, null>) => {
-    setActiveSection((current) => (current === section ? null : section));
-  };
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate("/wallet");
+    setActiveSection((current) => {
+      const effectiveCurrent =
+        current === null && hash === "#faq" ? "help" : current;
+      return effectiveCurrent === section ? null : section;
+    });
   };
 
   const handleLogout = async () => {
@@ -121,293 +193,167 @@ export function ProfilePage() {
     }
   };
 
-  return (
-    <div className="mx-auto w-full max-w-110 space-y-5 pb-2">
-      {/* Encabezado superior */}
-      <header className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Volver"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-auria-ink transition hover:bg-auria-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
-          >
-            <ChevronLeftIcon />
-          </button>
-          <h1 className="font-display text-xl font-bold tracking-tight text-auria-ink">
-            Mi perfil
-          </h1>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => toggleSection("help")}
-          aria-label="Centro de ayuda"
-          aria-expanded={activeSection === "help"}
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-auria-border/70 bg-auria-card text-auria-ink shadow-2xs transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
-        >
-          <HelpCircleIcon />
-        </button>
-      </header>
-
-      {/* Tarjeta principal de identidad */}
-      <section
-        aria-label="Resumen del perfil"
-        className="relative overflow-hidden rounded-3xl bg-auria-forest p-5 text-white shadow-md"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-8 -bottom-12 h-32 w-44 rounded-full bg-auria-lime/25 blur-xs"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-4 -bottom-14 h-28 w-36 rounded-full bg-auria-lime/80"
-        />
-
-        <div className="relative z-10">
-          <div className="space-y-1">
-            <p className="truncate text-2xl font-bold tracking-tight text-white">
-              {displayName}
-            </p>
-            <p className="truncate text-sm text-white/80">{displayEmail}</p>
+  const renderSectionDetail = (section: Exclude<ProfileSectionKey, null>) => {
+    if (section === "personal") {
+      return (
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Nombre completo</span>
+            <span className="font-semibold text-auria-ink">{displayName}</span>
           </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Email</span>
+            <span className="font-semibold text-auria-ink">{displayEmail}</span>
+          </div>
+        </div>
+      );
+    }
 
-          <div className="mt-5 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-auria-lime px-3.5 py-1.5 text-xs font-bold text-auria-forest">
-              <CheckIcon />
-              Cuenta verificada
+    if (section === "security") {
+      return (
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Método de acceso</span>
+            <span className="font-semibold text-auria-ink">
+              Credenciales / Google
             </span>
           </div>
-
-          {activeSection === "edit" && (
-            <div className="mt-4 rounded-2xl bg-white/10 p-3.5 text-xs text-white/90">
-              <p className="font-semibold text-auria-lime">Edición de perfil</p>
-              <p className="mt-1 leading-relaxed text-white/85">
-                Tus datos principales están sincronizados con tu cuenta de
-                AuriaWallet ({displayEmail}).
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Sección Mi cuenta */}
-      <section aria-labelledby="my-account-heading" className="space-y-2.5">
-        <h2
-          id="my-account-heading"
-          className="text-base font-bold tracking-tight text-auria-ink"
-        >
-          Mi cuenta
-        </h2>
-
-        <div className="overflow-hidden rounded-3xl border border-auria-border/70 bg-auria-card shadow-2xs">
-          {/* Datos personales */}
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleSection("personal")}
-              aria-expanded={activeSection === "personal"}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-auria-cream/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-auria-forest"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-auria-ink">
-                  Datos personales
-                </p>
-                <p className="mt-0.5 text-xs text-auria-muted">
-                  Nombre, DNI y datos de contacto
-                </p>
-              </div>
-              <ChevronRightIcon />
-            </button>
-
-            {activeSection === "personal" && (
-              <div className="space-y-1.5 border-t border-auria-border/60 bg-auria-cream/40 px-4 py-3 text-xs">
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Nombre completo</span>
-                  <span className="font-semibold text-auria-ink">
-                    {displayName}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Email</span>
-                  <span className="font-semibold text-auria-ink">
-                    {displayEmail}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mx-4 border-t border-auria-border/70" />
-
-          {/* Seguridad */}
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleSection("security")}
-              aria-expanded={activeSection === "security"}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-auria-cream/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-auria-forest"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-auria-ink">Seguridad</p>
-                <p className="mt-0.5 text-xs text-auria-muted">
-                  Contraseña y métodos de acceso
-                </p>
-              </div>
-              <ChevronRightIcon />
-            </button>
-
-            {activeSection === "security" && (
-              <div className="space-y-1.5 border-t border-auria-border/60 bg-auria-cream/40 px-4 py-3 text-xs">
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Método de acceso</span>
-                  <span className="font-semibold text-auria-ink">
-                    Email y contraseña
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Estado de sesión</span>
-                  <span className="font-semibold text-auria-forest">
-                    Protegida
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mx-4 border-t border-auria-border/70" />
-
-          {/* Límites de operación */}
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleSection("limits")}
-              aria-expanded={activeSection === "limits"}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-auria-cream/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-auria-forest"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-auria-ink">
-                  Límites de operación
-                </p>
-                <p className="mt-0.5 text-xs text-auria-muted">
-                  Consultá tus límites disponibles
-                </p>
-              </div>
-              <ChevronRightIcon />
-            </button>
-
-            {activeSection === "limits" && (
-              <div className="space-y-1.5 border-t border-auria-border/60 bg-auria-cream/40 px-4 py-3 text-xs">
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Monedas habilitadas</span>
-                  <span className="font-semibold text-auria-ink">
-                    ARS · USD · EUR
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-auria-muted">Nivel de cuenta</span>
-                  <span className="font-semibold text-auria-forest">
-                    Verificada sin restricciones
-                  </span>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Estado de sesión</span>
+            <span className="font-semibold text-auria-forest">Protegida</span>
           </div>
         </div>
-      </section>
+      );
+    }
 
-      {/* Sección Preferencias y ayuda */}
+    if (section === "limits") {
+      return (
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Monedas habilitadas</span>
+            <span className="font-semibold text-auria-ink">
+              ARS · USD · EUR
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-auria-muted">Nivel de cuenta</span>
+            <span className="font-semibold text-auria-forest">Verificada</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (section === "notifications") {
+      return (
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="font-medium text-auria-ink">
+            Alertas de movimientos y cotizaciones
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={notificationsEnabled}
+            onClick={() => setNotificationsEnabled((prev) => !prev)}
+            className={`cursor-pointer rounded-full px-3 py-1 font-bold transition ${
+              notificationsEnabled
+                ? "bg-auria-forest text-auria-lime"
+                : "border border-auria-border bg-white text-auria-muted"
+            }`}
+          >
+            {notificationsEnabled ? "Activadas" : "Desactivadas"}
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1 text-xs text-auria-muted">
+        <p className="font-semibold text-auria-ink">Soporte AuriaWallet</p>
+        <p>
+          Si tenés dudas sobre tus operaciones en ARS, USD o EUR, escribinos a{" "}
+          <span className="font-medium text-auria-ink">
+            soporte@auriawallet.app
+          </span>
+          .
+        </p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-110 space-y-6 pb-2 lg:max-w-5xl">
+      {/* Título superior */}
+      <header className="lg:pt-1">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-auria-ink lg:text-[26px] lg:leading-tight">
+          Perfil
+        </h1>
+      </header>
+
+      {/* Cabecera de identidad */}
       <section
-        aria-labelledby="preferences-help-heading"
-        className="space-y-2.5"
+        aria-label="Datos del usuario"
+        className="flex items-center gap-4 border-b border-auria-border pb-6"
       >
-        <h2
-          id="preferences-help-heading"
-          className="text-base font-bold tracking-tight text-auria-ink"
+        <span
+          aria-hidden="true"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-auria-border bg-auria-card text-lg font-bold tracking-wide text-auria-ink shadow-2xs"
         >
-          Preferencias y ayuda
-        </h2>
+          {initials}
+        </span>
 
-        <div className="overflow-hidden rounded-3xl border border-auria-border/70 bg-auria-card shadow-2xs">
-          {/* Notificaciones */}
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleSection("notifications")}
-              aria-expanded={activeSection === "notifications"}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-auria-cream/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-auria-forest"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-auria-ink">
-                  Notificaciones
-                </p>
-                <p className="mt-0.5 text-xs text-auria-muted">
-                  Elegí qué novedades querés recibir
-                </p>
-              </div>
-              <ChevronRightIcon />
-            </button>
-
-            {activeSection === "notifications" && (
-              <div className="flex items-center justify-between gap-3 border-t border-auria-border/60 bg-auria-cream/40 px-4 py-3 text-xs">
-                <span className="font-medium text-auria-ink">
-                  Alertas de movimientos y cotizaciones
-                </span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notificationsEnabled}
-                  onClick={() => setNotificationsEnabled((prev) => !prev)}
-                  className={`cursor-pointer rounded-full px-3 py-1 font-bold transition ${
-                    notificationsEnabled
-                      ? "bg-auria-forest text-auria-lime"
-                      : "border border-auria-border bg-white text-auria-muted"
-                  }`}
-                >
-                  {notificationsEnabled ? "Activadas" : "Desactivadas"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="mx-4 border-t border-auria-border/70" />
-
-          {/* Centro de ayuda */}
-          <div>
-            <button
-              type="button"
-              onClick={() => toggleSection("help")}
-              aria-expanded={activeSection === "help"}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-auria-cream/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-auria-forest"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-auria-ink">
-                  Centro de ayuda
-                </p>
-                <p className="mt-0.5 text-xs text-auria-muted">
-                  Estamos para acompañarte
-                </p>
-              </div>
-              <ChevronRightIcon />
-            </button>
-
-            {activeSection === "help" && (
-              <div className="space-y-1 border-t border-auria-border/60 bg-auria-cream/40 px-4 py-3 text-xs text-auria-muted">
-                <p className="font-semibold text-auria-ink">
-                  Soporte AuriaWallet
-                </p>
-                <p>
-                  Si tenés dudas sobre tus operaciones en ARS, USD o EUR,
-                  escribinos a soporte@auriawallet.app.
-                </p>
-              </div>
-            )}
-          </div>
+        <div className="min-w-0">
+          <p className="truncate text-lg font-bold tracking-wide text-auria-ink uppercase">
+            {displayName}
+          </p>
+          <p className="truncate text-sm text-auria-muted">{displayEmail}</p>
         </div>
       </section>
 
-      {/* Botón Cerrar sesión */}
-      <div className="pt-1">
+      {/* Grilla de tarjetas de configuración */}
+      <section
+        aria-label="Opciones de perfil"
+        className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {PROFILE_CARDS.map((card) => {
+          const isOpen = resolvedSection === card.key;
+
+          return (
+            <div
+              key={card.key}
+              id={card.anchorId}
+              className={`rounded-2xl border bg-auria-card p-5 shadow-2xs transition ${
+                isOpen
+                  ? "border-auria-forest/45 ring-1 ring-auria-forest/15"
+                  : "border-auria-border/80 hover:border-auria-forest/30"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => toggleSection(card.key)}
+                aria-expanded={isOpen}
+                className="flex w-full cursor-pointer flex-col items-start text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-auria-forest"
+              >
+                <span className="text-auria-ink">{card.renderIcon()}</span>
+                <span className="mt-4 text-base font-bold text-auria-ink">
+                  {card.title}
+                </span>
+                <span className="mt-1 text-xs leading-relaxed text-auria-muted">
+                  {card.description}
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="mt-4 border-t border-auria-border/70 pt-3.5">
+                  {renderSectionDetail(card.key)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Cerrar sesión en mobile (< lg) */}
+      <div className="pt-1 lg:hidden">
         <button
           type="button"
           disabled={isLoggingOut}

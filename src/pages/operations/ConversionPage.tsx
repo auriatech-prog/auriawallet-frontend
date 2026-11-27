@@ -1,11 +1,13 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button, Card, Input } from "@/components/ui";
 import {
+  CURRENCY_CONFIG,
   SUPPORTED_CURRENCIES,
   formatCurrencyAmount,
 } from "@/config/currencies";
-import type { CurrencyCode } from "@/types/wallet";
+import { walletService } from "@/services/walletService";
+import type { CurrencyCode, WalletBalanceItem } from "@/types/wallet";
 
 const CURRENCY_LIST: CurrencyCode[] = [...SUPPORTED_CURRENCIES];
 
@@ -16,11 +18,31 @@ const USD_REFERENCE_RATES: Record<CurrencyCode, number> = {
   ARS: 1150,
 };
 
+const QUICK_AMOUNTS_BY_CURRENCY: Record<CurrencyCode, number[]> = {
+  ARS: [10000, 25000, 50000, 100000],
+  USD: [50, 100, 250, 500],
+  EUR: [50, 100, 250, 500],
+};
+
 function getConversionRate(from: CurrencyCode, to: CurrencyCode): number {
   if (from === to) return 1;
   const fromInUsd = USD_REFERENCE_RATES[from] ?? 1;
   const toInUsd = USD_REFERENCE_RATES[to] ?? 1;
   return toInUsd / fromInUsd;
+}
+
+function parsePositiveAmount(value: string): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function formatQuickAmount(amount: number, currency: CurrencyCode): string {
+  const config = CURRENCY_CONFIG[currency];
+  const formatted = new Intl.NumberFormat(config.locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+  return `${config.symbol} ${formatted}`;
 }
 
 export function ConversionPage() {
@@ -29,10 +51,42 @@ export function ConversionPage() {
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>("ARS");
   const [toCurrency, setToCurrency] = useState<CurrencyCode>("USD");
   const [amount, setAmount] = useState("");
+  const [balances, setBalances] = useState<WalletBalanceItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const numericAmount = Number(amount);
-  const isValidAmount = Number.isFinite(numericAmount) && numericAmount > 0;
+  useEffect(() => {
+    let isActive = true;
+
+    walletService
+      .getBalances()
+      .then((response) => {
+        if (isActive) {
+          setBalances(response.balances);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setBalances(null);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const numericAmount = parsePositiveAmount(amount);
+  const isValidAmount = numericAmount !== null;
+
+  const balanceByCurrency = new Map(
+    (balances ?? []).map((item) => [item.currency, Number(item.amount)]),
+  );
+  const availableFromBalance = balanceByCurrency.get(fromCurrency) ?? null;
+  const exceedsBalance =
+    isValidAmount &&
+    availableFromBalance !== null &&
+    Number.isFinite(availableFromBalance) &&
+    numericAmount > availableFromBalance;
 
   const rate = useMemo(
     () => getConversionRate(fromCurrency, toCurrency),
@@ -44,6 +98,17 @@ export function ConversionPage() {
     return Number((numericAmount * rate).toFixed(2));
   }, [isValidAmount, numericAmount, rate]);
 
+  const formattedRateValue = rate >= 1 ? rate.toFixed(2) : rate.toFixed(6);
+  const formattedConvertedAmount = formatCurrencyAmount(
+    convertedAmount,
+    toCurrency,
+  );
+  const formattedSourceAmount = formatCurrencyAmount(
+    isValidAmount ? numericAmount : 0,
+    fromCurrency,
+  );
+  const quickAmounts = QUICK_AMOUNTS_BY_CURRENCY[fromCurrency];
+
   const handleSwapCurrencies = () => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
@@ -51,20 +116,25 @@ export function ConversionPage() {
   };
 
   const handleSelectFromCurrency = (code: CurrencyCode) => {
-    setFromCurrency(code);
+    if (code === fromCurrency) return;
     if (code === toCurrency) {
-      const fallback = CURRENCY_LIST.find((item) => item !== code);
-      if (fallback) setToCurrency(fallback);
+      setToCurrency(fromCurrency);
     }
+    setFromCurrency(code);
     if (error) setError(null);
   };
 
   const handleSelectToCurrency = (code: CurrencyCode) => {
-    setToCurrency(code);
+    if (code === toCurrency) return;
     if (code === fromCurrency) {
-      const fallback = CURRENCY_LIST.find((item) => item !== code);
-      if (fallback) setFromCurrency(fallback);
+      setFromCurrency(toCurrency);
     }
+    setToCurrency(code);
+    if (error) setError(null);
+  };
+
+  const handleQuickAmountSelect = (presetAmount: number) => {
+    setAmount(String(presetAmount));
     if (error) setError(null);
   };
 
@@ -78,6 +148,11 @@ export function ConversionPage() {
 
     if (!isValidAmount) {
       setError("Ingresá un monto mayor a 0.");
+      return;
+    }
+
+    if (exceedsBalance) {
+      setError(`Supera tu saldo disponible en ${fromCurrency}.`);
       return;
     }
 
@@ -96,26 +171,26 @@ export function ConversionPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-110 space-y-4 pb-2">
-      <header className="flex items-center justify-between gap-2">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-auria-ink">
-            Convertir dinero
-          </h1>
-          <p className="text-xs text-auria-muted">
-            Cambiá entre monedas con cotización estimada al instante
-          </p>
-        </div>
+    <div className="mx-auto w-full max-w-110 space-y-4 pb-2 lg:max-w-5xl lg:space-y-6">
+      <header className="flex items-center justify-between gap-3 lg:pt-1">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-auria-ink lg:text-[26px] lg:leading-tight">
+          Convertir dinero
+        </h1>
         <Link
           to="/operations"
-          className="text-xs font-bold text-auria-forest hover:underline"
+          className="text-xs font-bold text-auria-forest no-underline hover:underline lg:text-sm"
         >
-          Cambiar operación
+          ← Operaciones
         </Link>
       </header>
 
-      <Card className="space-y-4 rounded-3xl border border-auria-border bg-auria-card p-4 shadow-2xs">
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="space-y-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0"
+      >
+        {/* Columna izquierda: Configuración de origen, monto y destino */}
+        <Card className="space-y-4 rounded-3xl border border-auria-border bg-auria-card p-4 shadow-2xs lg:col-span-7 lg:space-y-5 lg:p-6">
           {/* Moneda de origen */}
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-auria-muted">
@@ -130,7 +205,7 @@ export function ConversionPage() {
                     type="button"
                     onClick={() => handleSelectFromCurrency(code)}
                     aria-pressed={selected}
-                    className={`cursor-pointer rounded-xl border py-2 text-xs font-bold tabular-nums transition ${
+                    className={`min-h-10 cursor-pointer rounded-xl border py-2 text-xs font-bold tabular-nums transition lg:min-h-11 lg:text-sm ${
                       selected
                         ? "border-auria-forest bg-auria-forest text-white"
                         : "border-auria-border bg-white text-auria-ink hover:bg-auria-cream"
@@ -143,20 +218,59 @@ export function ConversionPage() {
             </div>
           </div>
 
-          <Input
-            label={`Monto en ${fromCurrency}`}
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            placeholder="0.00"
-            value={amount}
-            onChange={(event) => {
-              setAmount(event.target.value);
-              if (error) setError(null);
-            }}
-            error={error ?? undefined}
-          />
+          {/* Monto en moneda de origen */}
+          <div className="space-y-2">
+            <Input
+              label={`Monto en ${fromCurrency}`}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              placeholder="0.00"
+              value={amount}
+              onChange={(event) => {
+                setAmount(event.target.value);
+                if (error) setError(null);
+              }}
+              error={error ?? undefined}
+            />
+
+            <div className="space-y-1.5">
+              <div
+                aria-label="Montos sugeridos"
+                className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-1.5"
+              >
+                {quickAmounts.map((preset) => {
+                  const isPresetSelected =
+                    isValidAmount && numericAmount === preset;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleQuickAmountSelect(preset)}
+                      className={`cursor-pointer rounded-full border px-1.5 py-1 text-center text-[10px] font-semibold whitespace-nowrap tabular-nums transition sm:px-2.5 sm:text-[11px] ${
+                        isPresetSelected
+                          ? "border-auria-forest bg-auria-lime-soft text-auria-forest"
+                          : "border-auria-border bg-auria-page/60 text-auria-muted hover:border-auria-forest/40 hover:text-auria-ink"
+                      }`}
+                    >
+                      {formatQuickAmount(preset, fromCurrency)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {availableFromBalance !== null &&
+                Number.isFinite(availableFromBalance) && (
+                  <p className="text-[11px] text-auria-muted tabular-nums">
+                    Disponible:{" "}
+                    <span className="font-semibold text-auria-ink">
+                      {formatCurrencyAmount(availableFromBalance, fromCurrency)}
+                    </span>
+                  </p>
+                )}
+            </div>
+          </div>
 
           {/* Botón invertir monedas */}
           <div className="flex items-center justify-between gap-3">
@@ -187,7 +301,7 @@ export function ConversionPage() {
                     type="button"
                     onClick={() => handleSelectToCurrency(code)}
                     aria-pressed={selected}
-                    className={`cursor-pointer rounded-xl border py-2 text-xs font-bold tabular-nums transition ${
+                    className={`min-h-10 cursor-pointer rounded-xl border py-2 text-xs font-bold tabular-nums transition lg:min-h-11 lg:text-sm ${
                       selected
                         ? "border-auria-forest bg-auria-forest text-white"
                         : "border-auria-border bg-white text-auria-ink hover:bg-auria-cream"
@@ -200,13 +314,12 @@ export function ConversionPage() {
             </div>
           </div>
 
-          {/* Resumen de cotización y resultado */}
-          <div className="space-y-2 rounded-2xl bg-auria-cream/70 p-3.5 text-xs">
+          {/* Resumen móvil (< lg) */}
+          <div className="space-y-2 rounded-2xl bg-auria-cream/70 p-3.5 text-xs lg:hidden">
             <div className="flex items-center justify-between gap-2">
               <span className="text-auria-muted">Cotización de referencia</span>
               <span className="font-semibold text-auria-ink tabular-nums">
-                1 {fromCurrency} ={" "}
-                {rate >= 1 ? rate.toFixed(2) : rate.toFixed(6)} {toCurrency}
+                1 {fromCurrency} = {formattedRateValue} {toCurrency}
               </span>
             </div>
 
@@ -215,10 +328,56 @@ export function ConversionPage() {
                 Vas a recibir
               </span>
               <span className="text-base font-bold text-auria-forest tabular-nums">
-                {formatCurrencyAmount(convertedAmount, toCurrency)}
+                {formattedConvertedAmount}
               </span>
             </div>
           </div>
+
+          <Button
+            type="submit"
+            className="min-h-12 w-full rounded-xl text-sm font-semibold lg:hidden"
+          >
+            Confirmar conversión
+          </Button>
+        </Card>
+
+        {/* Columna derecha en desktop: Resumen de conversión */}
+        <Card className="hidden rounded-3xl border border-auria-border bg-auria-card p-6 shadow-2xs lg:col-span-5 lg:block lg:space-y-5">
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-auria-ink">
+              Resumen de conversión
+            </h2>
+            <p className="text-xs text-auria-muted">
+              Revisá la tasa estimada y el importe a recibir.
+            </p>
+          </div>
+
+          <dl className="space-y-3 border-y border-auria-border py-4 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-auria-muted">Par de monedas</dt>
+              <dd className="font-bold text-auria-ink tabular-nums">
+                {fromCurrency} → {toCurrency}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-auria-muted">Cotización de referencia</dt>
+              <dd className="font-semibold text-auria-ink tabular-nums">
+                1 {fromCurrency} = {formattedRateValue} {toCurrency}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-auria-muted">Monto a convertir</dt>
+              <dd className="font-semibold text-auria-ink tabular-nums">
+                {formattedSourceAmount}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <dt className="font-semibold text-auria-ink">Vas a recibir</dt>
+              <dd className="text-lg font-bold text-auria-forest tabular-nums">
+                {formattedConvertedAmount}
+              </dd>
+            </div>
+          </dl>
 
           <Button
             type="submit"
@@ -226,8 +385,8 @@ export function ConversionPage() {
           >
             Confirmar conversión
           </Button>
-        </form>
-      </Card>
+        </Card>
+      </form>
     </div>
   );
 }
