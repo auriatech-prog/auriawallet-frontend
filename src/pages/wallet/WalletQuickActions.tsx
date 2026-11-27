@@ -1,78 +1,105 @@
 import { Link } from "react-router";
 
-const QUICK_ACTIONS = [
-  {
-    to: "/operations/buy-sell?mode=buy",
-    label: "Añadir",
-    icon: (
+interface QuickActionItem {
+  label: string;
+  to: string;
+  icon: "add" | "send" | "convert";
+}
+
+interface WalletQuickActionsProps {
+  embeddedInHero?: boolean;
+}
+
+const QUICK_ACTIONS: QuickActionItem[] = [
+  { label: "Añadir", to: "/operations/buy-sell?mode=buy", icon: "add" },
+  { label: "Enviar", to: "/operations/buy-sell?mode=sell", icon: "send" },
+  { label: "Convertir", to: "/operations/convert", icon: "convert" },
+];
+
+function ActionIcon({ icon }: { icon: QuickActionItem["icon"] }) {
+  if (icon === "add") {
+    return (
       <svg
-        className="h-6 w-6"
+        className="h-4 w-4 shrink-0"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
+        aria-hidden="true"
       >
         <circle cx="12" cy="12" r="9" />
         <path d="M12 8v8M8 12h8" strokeLinecap="round" />
       </svg>
-    ),
-  },
-  {
-    to: "/operations/buy-sell?mode=sell",
-    label: "Enviar",
-    icon: (
+    );
+  }
+
+  if (icon === "send") {
+    return (
       <svg
-        className="h-6 w-6"
+        className="h-4 w-4 shrink-0"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
+        aria-hidden="true"
       >
         <circle cx="12" cy="12" r="9" />
         <path d="M8 12h8" strokeLinecap="round" />
       </svg>
-    ),
-  },
-  {
-    to: "/operations/convert",
-    label: "Convertir",
-    icon: (
-      <svg
-        className="h-6 w-6"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      >
-        <path
-          d="M7 7h11l-3-3M17 17H6l3 3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-] as const;
+    );
+  }
 
-export function WalletQuickActions() {
   return (
-    <section aria-label="Acciones rápidas">
-      <div className="grid grid-cols-3 gap-3">
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      <path
+        d="M7 8h10m0 0-3-3m3 3-3 3M17 16H7m0 0 3-3m-3 3 3 3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function WalletQuickActions({
+  embeddedInHero = false,
+}: WalletQuickActionsProps) {
+  return (
+    <nav aria-label="Acciones rápidas">
+      <ul
+        className={`grid grid-cols-3 gap-2.5 ${
+          embeddedInHero
+            ? "lg:flex lg:max-w-[calc(100%-10.5rem)] lg:items-center lg:justify-start lg:gap-2.5"
+            : "lg:gap-3"
+        }`}
+      >
         {QUICK_ACTIONS.map((action) => (
-          <Link
+          <li
             key={action.label}
-            to={action.to}
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-auria-forest px-3 py-4 text-white shadow-sm transition hover:bg-auria-forest-hover active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auria-forest"
+            className={`min-w-0 ${embeddedInHero ? "lg:flex-1" : ""}`}
           >
-            <span aria-hidden="true" className="text-white">
-              {action.icon}
-            </span>
-            <span className="text-sm font-medium tracking-tight">
-              {action.label}
-            </span>
-          </Link>
+            <Link
+              to={action.to}
+              className={`flex min-h-19 w-full flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-3 text-center no-underline transition focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                embeddedInHero
+                  ? "bg-auria-forest text-white shadow-xs hover:bg-auria-forest/90 focus-visible:outline-auria-lime lg:min-h-9 lg:w-full lg:flex-row lg:gap-1.5 lg:rounded-full lg:border lg:border-auria-lime/35 lg:bg-white/10 lg:px-4 lg:py-1.5 lg:text-white lg:shadow-none lg:hover:border-auria-lime lg:hover:bg-auria-lime lg:hover:text-auria-forest"
+                  : "bg-auria-forest text-white shadow-sm hover:bg-auria-forest/90 focus-visible:outline-auria-forest lg:min-h-11 lg:flex-row lg:gap-2 lg:py-2.5"
+              }`}
+            >
+              <ActionIcon icon={action.icon} />
+              <span className="text-xs font-semibold tracking-tight lg:text-xs">
+                {action.label}
+              </span>
+            </Link>
+          </li>
         ))}
-      </div>
-    </section>
+      </ul>
+    </nav>
   );
 }

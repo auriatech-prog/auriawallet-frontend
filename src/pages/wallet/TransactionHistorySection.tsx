@@ -109,10 +109,13 @@ export function TransactionHistorySection() {
   }, []);
 
   return (
-    <section aria-labelledby="history-heading" className="space-y-3">
+    <section
+      aria-labelledby="history-heading"
+      className="space-y-3 lg:space-y-2"
+    >
       <div className="flex items-center justify-between">
         <h2 id="history-heading" className="text-lg font-bold text-auria-ink">
-          Historial de transacciones
+          Últimas transacciones
         </h2>
         <Link
           to="/transactions"
@@ -124,7 +127,7 @@ export function TransactionHistorySection() {
 
       {isLoading ? (
         <div
-          className="space-y-2.5"
+          className="space-y-2.5 lg:space-y-1.5"
           role="status"
           aria-busy="true"
           aria-label="Cargando historial de transacciones"
@@ -132,12 +135,12 @@ export function TransactionHistorySection() {
           {[0, 1, 2].map((skeletonIndex) => (
             <div
               key={skeletonIndex}
-              className="h-16 animate-pulse rounded-2xl border border-auria-border bg-auria-card"
+              className="h-16 animate-pulse rounded-2xl border border-auria-border bg-auria-card lg:h-13"
             />
           ))}
         </div>
       ) : error ? (
-        <Card className="border border-auria-border bg-auria-card p-4 shadow-xs">
+        <Card className="border border-auria-border bg-auria-card p-4 shadow-xs lg:p-3.5">
           <div role="alert" aria-live="polite">
             <h3 className="text-sm font-semibold text-auria-ink">
               No pudimos cargar el historial
@@ -147,14 +150,14 @@ export function TransactionHistorySection() {
           <Button
             type="button"
             variant="secondary"
-            className="mt-3 min-h-10 w-full rounded-xl text-xs font-semibold"
+            className="mt-3 min-h-10 w-full rounded-xl text-xs font-semibold lg:mt-2.5 lg:min-h-9"
             onClick={() => void refreshTransactions()}
           >
             Reintentar
           </Button>
         </Card>
       ) : !transactions || transactions.length === 0 ? (
-        <Card className="border border-auria-border bg-auria-card p-5 shadow-xs">
+        <Card className="border border-auria-border bg-auria-card p-5 shadow-xs lg:p-4">
           <h3 className="text-sm font-semibold text-auria-ink">
             Todavía no hay movimientos registrados
           </h3>
@@ -164,7 +167,10 @@ export function TransactionHistorySection() {
           </p>
         </Card>
       ) : (
-        <ul className="space-y-2.5" aria-label="Últimas transacciones">
+        <ul
+          className="space-y-2.5 lg:space-y-1.5"
+          aria-label="Últimas transacciones"
+        >
           {transactions.slice(0, 5).map((item) => {
             const currency = isSupportedCurrency(item.currency)
               ? item.currency
@@ -173,7 +179,7 @@ export function TransactionHistorySection() {
             return (
               <li
                 key={item.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-auria-border bg-auria-card px-4 py-3 shadow-xs"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-auria-border bg-auria-card px-4 py-3 shadow-xs lg:px-3.5 lg:py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-auria-ink">
